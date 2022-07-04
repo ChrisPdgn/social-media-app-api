@@ -1,6 +1,12 @@
 {
   "extends": "@tsconfig/node16/tsconfig.json",
-  "compilerOptions": {"outDir": "dist"},
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "allowJs": true,
+    "strictPropertyInitialization": false
+
+  },
   "include": ["src"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
 }
