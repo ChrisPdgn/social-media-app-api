@@ -5,17 +5,23 @@ import {
     PrimaryColumn,
     OneToMany,
     CreateDateColumn,
-    UpdateDateColumn
-} from "typeorm"
-import { Post } from "./post"
+    UpdateDateColumn,
+    Unique
+} from "typeorm";
+import { Post } from "./post";
+import bcrypt from "bcryptjs";
 
 @Entity()
 export class User {
     @PrimaryColumn()
+    id: number;
+
+    @Column({type: "varchar", nullable: false, unique: true})
+    @Length(5, 100)
     email: string;
 
     @Column({type: "varchar", nullable: false})
-    @Length(4, 100)
+    @Length(5, 100)
     password: string;
 
     @Column({type: "varchar", length: "30"})
@@ -32,5 +38,13 @@ export class User {
 
     @OneToMany(() => Post, (post) => post.user) 
     posts: Post[];
+
+    hashPassword() {
+        this.password = bcrypt.hashSync(this.password, 8);
+    }
+    
+    checkIfUnencryptedPasswordIsValid(unencryptedPassword: string) {
+        return bcrypt.compareSync(unencryptedPassword, this.password);
+    }
     
 }

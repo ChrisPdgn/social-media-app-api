@@ -1,8 +1,13 @@
 import "reflect-metadata";
-import { DataSource } from "typeorm"
-import { User } from "./entity/user"
-import { Post } from "./entity/post"
-import { Comment } from "./entity/comment"
+import { DataSource } from "typeorm";
+import { User } from "./entity/user";
+import { Post } from "./entity/post";
+import { Comment } from "./entity/comment";
+import routes from "./routes";
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import bodyParser from "body-parser";
 
 const AppDataSource = new DataSource({
     type: "sqlite",
@@ -16,7 +21,21 @@ const AppDataSource = new DataSource({
 // and "synchronize" database schema, call "initialize()" method of a newly created database
 // once in your application bootstrap
 AppDataSource.initialize()
-    .then(() => {
+    .then(async connection => {
         console.log("Initialized!!");
+        const app = express();
+
+        app.use(cors());
+        app.use(helmet());
+        app.use(bodyParser.json());
+
+        app.use("/", routes);
+
+        app.listen(3000, () => {
+            console.log("Server started on port 3000!");
+        });
     })
     .catch((error) => console.log(error))
+
+    export {AppDataSource};
+
