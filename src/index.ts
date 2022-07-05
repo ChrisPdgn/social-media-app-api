@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 import { User } from "./entity/user";
 import { Post } from "./entity/post";
 import { Comment } from "./entity/comment";
-import routes from "./routes/index";
+import routes from "./routes/router";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";

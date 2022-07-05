@@ -12,11 +12,12 @@ export const checkRole = (roles: Array<string>) => {
     const userRepository = AppDataSource.getRepository(User);
 
     try {
-      await userRepository.findOneOrFail(id).then((user) => {
+      await userRepository.findOneByOrFail(id).then((user) => {
         if (roles.indexOf(user.role) > -1) next();
         else res.status(401).send();
       });
     } catch (id) {
+      console.log("Role not right");
       res.status(401).send();
     }
 

@@ -7,6 +7,7 @@ import { User } from "../entity/user";
 class UserController {
 
     static getAllUsers = async (req: Request, res: Response) => {
+        console.log("Get All")
         const userRepository = AppDataSource.getRepository(User);
         const users = await userRepository.find({
             select: ["email", "role"] //We dont want to send the passwords on response
@@ -16,19 +17,21 @@ class UserController {
 
     static getUserByEmail = async (req: Request, res: Response) => {
         let email = req.params.email;
+        console.log(email);
 
         const userRepository = AppDataSource.getRepository(User);
         try {
             const user = await userRepository.findOneByOrFail({email: email})
-            .then((user) => { res.send({"email": user.email , "role": user.role}); });
+            .then((user) => { res.send({"email": user.email , "role": user.role}); }); //We dont want to send the passwords on response
         } catch (error) {
             res.status(404).send("User not found");
         }
     };
 
     static newUser = async (req: Request, res: Response) => {
-        let { email, password, role } = req.body;
+        let { id, email, password, role } = req.body;
         let user = new User();
+        user.id = id;
         user.email = email;
         user.password = password;
         user.role = role;
@@ -43,12 +46,11 @@ class UserController {
         //Hash the password, to securely store on DB
         user.hashPassword();
 
-        //Try to save. If fails, the username is already in use
         const userRepository = AppDataSource.getRepository(User);
         try {
             await userRepository.save(user);
         } catch (error) {
-            res.status(409).send("Username already in use");
+            res.status(409).send("Email already in use");
             return;
         }
         res.status(201).send("User created");
@@ -56,17 +58,12 @@ class UserController {
 
     // static editUser = async (req: Request, res: Response) => {
     //     const email = req.params.email;
-
-    //     //Get values from the body
     //     const { role } = req.body;
-
-    //     //Try to find user on database
     //     const userRepository = AppDataSource.getRepository(User);
     //     let user;
     //     try {
     //         user = await userRepository.findOneByOrFail({email: email});
     //     } catch (error) {
-    //         //If not found, send a 404 response
     //         res.status(404).send("User not found");
     //         return;
     //     }
@@ -80,7 +77,6 @@ class UserController {
     //         return;
     //     }
 
-    //     //Try to safe, if fails, that means username already in use
     //     try {
     //         await userRepository.save(user);
     //     } catch (e) {
@@ -93,11 +89,11 @@ class UserController {
 
     static deleteUser = async (req: Request, res: Response) => {
         const email = req.params.email;
+        console.log("Delete");
 
         const userRepository = AppDataSource.getRepository(User);
-        let user;
         try {
-            user = await userRepository.findOneByOrFail({email: email}).then((user) => {userRepository.remove(user);});
+            await userRepository.findOneByOrFail({email: email}).then((user) => {userRepository.remove(user);});
             // await userRepository.remove(user);
         } catch (error) {
             res.status(404).send("User not found");
