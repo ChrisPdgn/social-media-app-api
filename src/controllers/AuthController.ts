@@ -6,85 +6,73 @@ import { User } from "../entity/user";
 import config from "../config/config";
 
 class AuthController {
+
   static login = async (req: Request, res: Response) => {
     //Check if username and password are set
     let { email, password } = req.body;
-    if (!(email && password)) {
+    if (!(email && password)) 
       res.status(400).send();
-    }
 
     //Get user from database
     const userRepository = AppDataSource.getRepository(User);
-    let user;
+
     try {
-      user = await userRepository.findOneBy({email: email});
+      await userRepository.findOneByOrFail({email: email})
+      .then((user) => {
+        if(!user.checkIfUnencryptedPasswordIsValid(password)){
+          res.status(401).send();
+          return;
+        } else{
+          //Sing JWT, valid for 1 hour
+          const token = jwt.sign({ userId: user.id, email: user.email }, config.jwtSecret, { expiresIn: "1h" });
+          //Send the jwt in the response
+          res.send(token);
+        }});
     } catch (error) {
       res.status(401).send();
       return;
     }
-
-    // TO CHECK
-    if (user != null) {
-      //Check if encrypted password match
-      if (!user.checkIfUnencryptedPasswordIsValid(password)) {
-        res.status(401).send();
-        return;
-      }
-
-      //Sing JWT, valid for 1 hour
-      const token = jwt.sign(
-        { userId: user.id, email: user.email },
-        config.jwtSecret,
-        { expiresIn: "1h" }
-      );
-      //Send the jwt in the response
-      res.send(token);
-    }else{
-      res.status(401).send();
-    }
   };
 
-  static changePassword = async (req: Request, res: Response) => {
-    //Get ID from JWT
-    const id = res.locals.jwtPayload.userId;
 
-    //Get parameters from the body
-    const { oldPassword, newPassword } = req.body;
-    if (!(oldPassword && newPassword)) {
-      res.status(400).send();
-    }
+  // static changePassword = async (req: Request, res: Response) => {
+  //   //Get ID from JWT
+  //   const id = res.locals.jwtPayload.userId;
 
-    //Get user from the database
-    const userRepository = AppDataSource.getRepository(User);
-    let user;
-    try {
-      user = await userRepository.findOneOrFail(id);
-    } catch (id) {
-      res.status(401).send();
-    }
+  //   //Get parameters from the body
+  //   const { oldPassword, newPassword } = req.body;
+  //   if (!(oldPassword && newPassword)) 
+  //     res.status(400).send();
 
-    // TO CHECK
-    if(user != null){
-      //Check if old password matchs
-      if (!user.checkIfUnencryptedPasswordIsValid(oldPassword)) {
-        res.status(401).send();
-        return;
-      }
+  //   const userRepository = AppDataSource.getRepository(User);
+  //   try {
+  //     await userRepository.findOneByOrFail(id)
+  //     .then((user) =>{
+  //       if (!user.checkIfUnencryptedPasswordIsValid(oldPassword)) {
+  //         res.status(401).send();
+  //         return;
+  //       }else{
+  //         //Validate the model (password lenght)
+  //         user.password = newPassword;
+  //         const errors = await validate(user);
+  //         if (errors.length > 0) {
+  //           res.status(400).send(errors);
+  //           return;
+  //         }
 
-      //Validate the model (password lenght)
-      user.password = newPassword;
-      const errors = await validate(user);
-      if (errors.length > 0) {
-        res.status(400).send(errors);
-        return;
-      }
-      //Hash the new password and save
-      user.hashPassword();
-      userRepository.save(user);
+  //         //Hash the new password and save
+  //         user.hashPassword();
+  //         userRepository.save(user);
 
-      res.status(204).send();
-    }
+  //         res.status(204).send();
+  //       }
+  //     });
+  //   } catch (id) {
+  //     res.status(401).send();
+  //   }
 
-  };
+  // };
+
 }
+
 export default AuthController;

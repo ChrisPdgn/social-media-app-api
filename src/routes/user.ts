@@ -18,12 +18,12 @@ import { Router } from "express";
   //Create a new user
   router.post("/", [checkJwt, checkRole(["ADMIN"])], UserController.newUser);
 
-  //Edit one user
-  router.patch(
-    "/:id([0-9]+)",
-    [checkJwt, checkRole(["ADMIN"])],
-    UserController.editUser
-  );
+  // //Edit one user
+  // router.patch(
+  //   "/:id([0-9]+)",
+  //   [checkJwt, checkRole(["ADMIN"])],
+  //   UserController.editUser
+  // );
 
   //Delete one user
   router.delete(

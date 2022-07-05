@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 import { User } from "./entity/user";
 import { Post } from "./entity/post";
 import { Comment } from "./entity/comment";
-import routes from "./routes";
+import routes from "./routes/index";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -13,6 +13,7 @@ const AppDataSource = new DataSource({
     type: "sqlite",
     database: "./data/social-media-app",
     entities: [User, Post, Comment],
+    migrations: [User],
     synchronize: true,
     logging: true
 })
@@ -29,6 +30,7 @@ AppDataSource.initialize()
         app.use(helmet());
         app.use(bodyParser.json());
 
+        //Set all routes from routes folder
         app.use("/", routes);
 
         app.listen(3000, () => {
