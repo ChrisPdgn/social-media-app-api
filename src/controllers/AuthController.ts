@@ -9,7 +9,9 @@ class AuthController {
 
   static login = async (req: Request, res: Response) => {
     //Check if username and password are set
+    console.log(req.body);
     let { email, password } = req.body;
+    console.log(email,password);
     if (!(email && password)) 
       res.status(400).send();
 
@@ -26,6 +28,7 @@ class AuthController {
           //Sing JWT, valid for 1 hour
           const token = jwt.sign({ userId: user.id, email: user.email }, config.jwtSecret, { expiresIn: "1h" });
           //Send the jwt in the response
+          console.log("Sending token");
           res.send(token);
         }});
     } catch (error) {

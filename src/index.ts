@@ -13,7 +13,7 @@ const AppDataSource = new DataSource({
     type: "sqlite",
     database: "./data/social-media-app",
     entities: [User, Post, Comment],
-    migrations: [User],
+    migrations: ['./migration/**/*.ts'],
     synchronize: true,
     logging: true
 })
@@ -39,5 +39,5 @@ AppDataSource.initialize()
     })
     .catch((error) => console.log(error))
 
-    export {AppDataSource};
+export {AppDataSource};
 
