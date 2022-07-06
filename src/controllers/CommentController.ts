@@ -9,14 +9,13 @@ class CommentController {
 
     //create comment
     static newComment = async (req: Request, res: Response) => {
-        let { content, userId, postId } = req.body;
-        let comment = new Comment();
-        
+
         const userRepository = AppDataSource.getRepository(User);
         const postRepository = AppDataSource.getRepository(Post);
         const commRepository = AppDataSource.getRepository(Comment);
-        let user;
-        let post;
+        let { content, userId, postId } = req.body;
+        let comment = new Comment();
+        let user, post;
 
         try{
             user = await userRepository.findOneByOrFail({id: userId});
@@ -46,28 +45,44 @@ class CommentController {
 
     //edit comment
     static editComment = async (req: Request, res: Response) => {
-        let id;
+
+        const {userId, content} = req.body;
+        const commRepository = AppDataSource.getRepository(Comment);
+        let commentId, comment, findComment;
+
         try{
-            id = parseInt(req.params.id);
+            commentId = parseInt(req.body.commentId);
         }catch(error){
             res.status(400).send("Id not a valid int");
         }
 
-        //Get values from the body
-        const content = req.body.content;
-
-        const commRepository = AppDataSource.getRepository(Comment);
-        let comment;
         try {
-            comment = await commRepository.findOneByOrFail({commentId: id});
+            findComment = await commRepository.find({
+                relations: {
+                    user: true
+                },
+                where:{
+                    commentId: commentId,
+                    user: {
+                        id: userId
+                    }
+                }});
+            console.log(findComment);
+
+            if(findComment == null){
+                res.status(401).send("Unauthorized");
+                return;
+            }else{
+                //find comment again because the one above is joined with user and not identical with obj Comment
+                comment = await commRepository.findOneByOrFail({commentId: commentId});
+                comment.content = content;
+            }
         } catch (error) {
             res.status(404).send("Comment not found");
             return;
         }
 
-        //Validate the new values on model
-        comment.content = content;
-        
+        //Validate the new values on model     
         const errors = await validate(comment);
         if (errors.length > 0) {
             res.status(400).send(errors);
@@ -86,17 +101,39 @@ class CommentController {
 
     //delete comment
     static deleteComment = async (req: Request, res: Response) => {
-        let id;
+
+        const commRepository = AppDataSource.getRepository(Comment);
+        const userId = req.body.userId;
+        let commentId, comment, findComment;
+
         try{
-            id = parseInt(req.params.id);
+            commentId = parseInt(req.body.commentId);
         }catch(error){
             res.status(400).send("Id not a valid int");
             return;
         }
 
-        const commRepository = AppDataSource.getRepository(Comment);
         try {
-            await commRepository.findOneByOrFail({commentId: id}).then((comment) => {commRepository.remove(comment);});
+            findComment = await commRepository.find({
+                relations: {
+                    user: true
+                },
+                where:{
+                    commentId: commentId,
+                    user: {
+                        id: userId
+                    }
+                }});
+            console.log(findComment);
+
+            if(findComment == null){
+                res.status(401).send("Unauthorized");
+                return;
+            }else{
+                //find comment again because the one above is joined with user and not identical with obj Comment
+                comment = await commRepository.findOneByOrFail({commentId: commentId});
+                await commRepository.remove(comment);
+            }
         } catch (error) {
             res.status(404).send("Comment not found");
             return;
@@ -106,15 +143,17 @@ class CommentController {
 
     //get comments of a post
     static getPostComments = async (req: Request, res: Response) => {
+
+        const postRepository = AppDataSource.getRepository(Post);
         let postId;
+
         try{
-            postId = parseInt(req.params.postId);
+            postId = parseInt(req.body.postId);
         }catch{
             res.status(400).send("Id not a valid int");
             return;
         }
 
-        const postRepository = AppDataSource.getRepository(Post);
         try {
             const post = await postRepository.findOneByOrFail({postId: postId})
             .then((post) => { res.send({comments: post.comments}); });

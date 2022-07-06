@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { validate } from "class-validator";
+//import { validate } from "class-validator";
 import { AppDataSource } from "../index";
 import { User } from "../entity/user";
 import config from "../config/config";
@@ -8,15 +8,13 @@ import config from "../config/config";
 class AuthController {
 
   static login = async (req: Request, res: Response) => {
+
+    const userRepository = AppDataSource.getRepository(User);
+
     //Check if username and password are set
-    console.log(req.body);
     let { email, password } = req.body;
-    console.log(email,password);
     if (!(email && password)) 
       res.status(400).send();
-
-    //Get user from database
-    const userRepository = AppDataSource.getRepository(User);
 
     try {
       await userRepository.findOneByOrFail({email: email})
@@ -24,7 +22,7 @@ class AuthController {
         if(!user.checkIfUnencryptedPasswordIsValid(password)){
           res.status(401).send();
           return;
-        } else{
+        }else {
           //Sing JWT, valid for 1 hour
           const token = jwt.sign({ userId: user.id, email: user.email }, config.jwtSecret, { expiresIn: "1h" });
           //Send the jwt in the response
@@ -32,9 +30,10 @@ class AuthController {
           res.send(token);
         }});
     } catch (error) {
-      res.status(401).send();
-      return;
+        res.status(401).send();
+        return;
     }
+
   };
 
 

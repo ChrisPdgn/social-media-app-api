@@ -19,8 +19,7 @@ const AppDataSource = new DataSource({
 })
 
 // to initialize initial connection with the database, register all entities
-// and "synchronize" database schema, call "initialize()" method of a newly created database
-// once in your application bootstrap
+// and "synchronize" database schema
 AppDataSource.initialize()
     .then(async connection => {
         console.log("Initialized!!");

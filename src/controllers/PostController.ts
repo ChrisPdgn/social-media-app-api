@@ -8,12 +8,13 @@ class PostController {
 
     //create post
     static newPost = async (req: Request, res: Response) => {
-        let { content , userId} = req.body;
-        let post = new Post();
 
         const userRepository = AppDataSource.getRepository(User);
         const postRepository = AppDataSource.getRepository(Post);
+        let { content , userId } = req.body;
+        let post = new Post();
         let user;
+
         try {
             user = await userRepository.findOneByOrFail({id: userId})
             .then((user) => { 
@@ -37,33 +38,52 @@ class PostController {
             console.log("Post not created");
             return;
         }
+
         res.status(201).send("Post created");
     };
 
     //edit post
     static editPost = async (req: Request, res: Response) => {
-        let id;
+
+        const content = req.body.content;
+        const userId = req.body.userId;
+        const postRepository = AppDataSource.getRepository(Post);
+        let postId, post, findPost;
+
         try{
-            id = parseInt(req.params.id);
+            postId = parseInt(req.body.postId);
         }catch(error){
             res.status(400).send("Id not a valid int");
         }
 
-        //Get values from the body
-        const content = req.body.content;
-
-        const postRepository = AppDataSource.getRepository(Post);
-        let post;
         try {
-            post = await postRepository.findOneByOrFail({postId: id});
+            findPost = await postRepository.find({
+                relations: {
+                    user: true
+                },
+                where:{
+                    postId: postId,
+                    user: {
+                        id: userId
+                    }
+                }
+            });
+            console.log(findPost);
+
+            if(findPost == null){
+                res.status(401).send("Unauthorized");
+                return;
+            }else{
+                //find post again because the one above is joined with user and not identical with obj Post
+                post = await postRepository.findOneByOrFail({postId: postId});
+                post.content = content;
+            }
         } catch (error) {
             res.status(404).send("Post not found");
             return;
         }
 
         //Validate the new values on model
-        post.content = content;
-        
         const errors = await validate(post);
         if (errors.length > 0) {
             res.status(400).send(errors);
@@ -82,17 +102,39 @@ class PostController {
 
     //delete post
     static deletePost = async (req: Request, res: Response) => {
-        let id;
+
+        const userId = req.body.userId;
+        const postRepository = AppDataSource.getRepository(Post);
+        let postId, post, findPost;
+
         try{
-            id = parseInt(req.params.id);
+            postId = parseInt(req.body.id);
         }catch(error){
             res.status(400).send("Id not a valid int");
             return;
         }
 
-        const postRepository = AppDataSource.getRepository(Post);
         try {
-            await postRepository.findOneByOrFail({postId: id}).then((post) => {postRepository.remove(post);});
+            findPost = await postRepository.find({
+                relations: {
+                    user: true
+                },
+                where:{
+                    postId: postId,
+                    user: {
+                        id: userId
+                    }
+                }});
+            console.log(findPost);
+
+            if(findPost == null){
+                res.status(401).send("Unauthorized");
+                return;
+            }else{
+                //find post again because the one above is joined with user and not identical with obj Post
+                post = await postRepository.findOneByOrFail({postId: postId});
+                await postRepository.remove(post);
+            }
         } catch (error) {
             res.status(404).send("Post not found");
             return;
@@ -102,12 +144,26 @@ class PostController {
 
     //get my posts or get another user's post
     static getUserPosts = async (req: Request, res: Response) => {
-        let email = req.params.email;
-        const userRepository = AppDataSource.getRepository(User);
+
+        const email = req.body.email;
+        const postRepository = AppDataSource.getRepository(Post);
+
         try {
-            const user = await userRepository.findOneByOrFail({email: email})
-            .then((user) => { res.send({posts: user.posts}); });
+            const posts = await postRepository.find({
+                // select: ["postId", "content", "date", "comments"],
+                relations: {
+                    user: true
+                },
+                where:{
+                    user: {
+                        email: email
+                    }
+                }}).then((posts)=> {
+                //I use map to remove sensitive data of user since select won't work for some reason
+                res.status(200).send(posts.map(({user, ...rest})=> {return rest;}));
+            });
         } catch (error) {
+            console.log(error);
             res.status(404).send("User/Posts not found");
         }
     };
@@ -115,7 +171,9 @@ class PostController {
 
     //get all posts chronologically ordered
     static getAllPosts = async (req: Request, res: Response) => {
+
         const postRepository = AppDataSource.getRepository(Post);
+
         try {
             const posts = await postRepository.find()
             .then((posts) => { 
@@ -124,6 +182,7 @@ class PostController {
         } catch (error) {
             res.status(404).send("Posts not found");
         }
+        
     };
 
 }

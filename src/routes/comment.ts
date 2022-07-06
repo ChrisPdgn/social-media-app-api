@@ -6,15 +6,15 @@ import { checkRole } from "../middlewares/checkRole";
 const router = Router();
 
 //create comment
-router.post("/:userId&:postId&:content", [checkJwt, checkRole(["ADMIN"])], CommentController.newComment);
+router.post("/comment", [checkJwt], CommentController.newComment);
 
 //edit comment
-router.patch("/:commId", [checkJwt, checkRole(["ADMIN"])], CommentController.editComment);
+router.patch("/comment", [checkJwt], CommentController.editComment);
 
 //delete comment
-router.delete("/:commId", [checkJwt, checkRole(["ADMIN"])], CommentController.deleteComment);
+router.delete("/comment", [checkJwt], CommentController.deleteComment);
 
 //get comments of a post
-router.get("/:postId", [checkJwt, checkRole(["ADMIN"])], CommentController.getPostComments);
+router.get("/comments", [checkJwt], CommentController.getPostComments);
 
 export default router;

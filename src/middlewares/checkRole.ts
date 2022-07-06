@@ -17,7 +17,7 @@ export const checkRole = (roles: Array<string>) => {
         else res.status(401).send();
       });
     } catch (id) {
-      console.log("Role not right");
+      console.log("Unauthorized");
       res.status(401).send();
     }
 
