@@ -40,9 +40,9 @@ class UserController {
     static newUser = async (req: Request, res: Response) => {
 
         const userRepository = AppDataSource.getRepository(User);
-        let { id, email, password, role } = req.body;
+        let { email, password, role } = req.body;
         let user = new User();
-        user.id = id;
+        //user.id = id;
         user.email = email;
         user.password = password;
         user.role = role;

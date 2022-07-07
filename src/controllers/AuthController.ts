@@ -20,7 +20,7 @@ class AuthController {
       await userRepository.findOneByOrFail({email: email})
       .then((user) => {
         if(!user.checkIfUnencryptedPasswordIsValid(password)){
-          res.status(401).send();
+          res.status(401).send("Password not valid");
           return;
         }else {
           //Sing JWT, valid for 1 hour

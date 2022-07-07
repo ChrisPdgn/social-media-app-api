@@ -2,7 +2,7 @@ import { IsNotEmpty, Length } from "class-validator";
 import {
     Entity,
     Column,
-    PrimaryColumn,
+    PrimaryGeneratedColumn,
     OneToMany,
     CreateDateColumn,
     UpdateDateColumn,
@@ -13,7 +13,7 @@ import bcrypt from "bcryptjs";
 
 @Entity()
 export class User {
-    @PrimaryColumn()
+    @PrimaryGeneratedColumn()
     id: number;
 
     @Column({type: "varchar", nullable: false, unique: true})
