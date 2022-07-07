@@ -155,8 +155,14 @@ class CommentController {
         }
 
         try {
-            const post = await postRepository.findOneByOrFail({postId: postId})
-            .then((post) => { res.send({comments: post.comments}); });
+            const post = await postRepository.find({
+                relations: {
+                    comments: true
+                },
+                where: {
+                    postId: postId}
+            })
+            .then((post) => { res.status(200).send({post}); });
         } catch (error) {
             res.status(404).send("Post/Comments not found");
         }

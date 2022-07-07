@@ -108,7 +108,7 @@ class PostController {
         let postId, post, findPost;
 
         try{
-            postId = parseInt(req.body.id);
+            postId = parseInt(req.body.postId);
         }catch(error){
             res.status(400).send("Id not a valid int");
             return;
@@ -132,10 +132,12 @@ class PostController {
                 return;
             }else{
                 //find post again because the one above is joined with user and not identical with obj Post
-                post = await postRepository.findOneByOrFail({postId: postId});
-                await postRepository.remove(post);
+                await postRepository.findOneByOrFail({postId: postId}).then((post)=>{
+                    postRepository.remove(post);
+                });
             }
         } catch (error) {
+            console.log(error);
             res.status(404).send("Post not found");
             return;
         }
@@ -152,7 +154,8 @@ class PostController {
             const posts = await postRepository.find({
                 // select: ["postId", "content", "date", "comments"],
                 relations: {
-                    user: true
+                    user: true,
+                    comments: true
                 },
                 where:{
                     user: {
@@ -173,12 +176,21 @@ class PostController {
     static getAllPosts = async (req: Request, res: Response) => {
 
         const postRepository = AppDataSource.getRepository(Post);
+        let filteredPosts;
 
         try {
-            const posts = await postRepository.find()
+            const posts = await postRepository.find({
+                relations: {
+                    user: true,
+                    comments: true
+                }
+            })
             .then((posts) => { 
-                const sortedPosts = posts.sort((objA, objB) => objB.date.getTime() - objA.date.getTime(),);
-                res.send({sortedPosts}); });
+                //I use map to remove sensitive data of user since select won't work for some reason
+                filteredPosts = posts.map(({user, ...rest})=> {return rest;});
+                const sortedPosts = filteredPosts.sort((objA, objB) => objB.date.getTime() - objA.date.getTime(),);
+                res.send({sortedPosts}); 
+            });
         } catch (error) {
             res.status(404).send("Posts not found");
         }

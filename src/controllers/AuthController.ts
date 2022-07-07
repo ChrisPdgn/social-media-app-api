@@ -36,7 +36,6 @@ class AuthController {
 
   };
 
-
   // static changePassword = async (req: Request, res: Response) => {
   //   //Get ID from JWT
   //   const id = res.locals.jwtPayload.userId;
