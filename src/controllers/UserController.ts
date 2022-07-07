@@ -2,28 +2,36 @@ import { Request, Response } from "express";
 import { validate } from "class-validator";
 import { AppDataSource } from "../index";
 import { User } from "../entity/user";
+import paginate from "../middlewares/pagination";
 
 
 class UserController {
 
     static getAllUsers = async (req: Request, res: Response) => {
 
+        const page = parseInt(req.body.page);
+        const limit = parseInt(req.body.limit);
+
         const userRepository = AppDataSource.getRepository(User);
 
         //Select used to protect sensitive user data
         const users = await userRepository.find({ select: ["email", "role"] });
-        res.send(users);
+        res.send(paginate(page, limit, users));
     };
 
     static getUserByEmail = async (req: Request, res: Response) => {
 
         const userRepository = AppDataSource.getRepository(User);
+        const page = parseInt(req.body.page);
+        const limit = parseInt(req.body.limit);
         let email = req.body.email;
 
         try {
             //Select used to protect sensitive user data
             const user = await userRepository.findOneByOrFail({email: email})
-            .then((user) => { res.send({"email": user.email , "role": user.role}); }); 
+            .then((user) => { 
+                res.send(paginate(page, limit, [{"email": user.email , "role": user.role}])); 
+            }); 
         } catch (error) {
             res.status(404).send("User not found");
         }

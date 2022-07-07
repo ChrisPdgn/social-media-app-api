@@ -3,6 +3,7 @@ import { validate } from "class-validator";
 import { AppDataSource } from "../index";
 import { Post } from "../entity/post";
 import { User } from "../entity/user";
+import paginate from "../middlewares/pagination";
 
 class PostController {
 
@@ -105,7 +106,7 @@ class PostController {
 
         const userId = req.body.userId;
         const postRepository = AppDataSource.getRepository(Post);
-        let postId, post, findPost;
+        let postId, findPost;
 
         try{
             postId = parseInt(req.body.postId);
@@ -148,6 +149,8 @@ class PostController {
     static getUserPosts = async (req: Request, res: Response) => {
 
         const email = req.body.email;
+        const page = parseInt(req.body.page);
+        const limit = parseInt(req.body.limit);
         const postRepository = AppDataSource.getRepository(Post);
 
         try {
@@ -163,7 +166,8 @@ class PostController {
                     }
                 }}).then((posts)=> {
                 //I use map to remove sensitive data of user since select won't work for some reason
-                res.status(200).send(posts.map(({user, ...rest})=> {return rest;}));
+                const mapPosts = posts.map(({user, ...rest})=> {return rest;});
+                res.status(200).send(paginate(page, limit, mapPosts));
             });
         } catch (error) {
             console.log(error);
@@ -174,9 +178,10 @@ class PostController {
 
     //get all posts chronologically ordered
     static getAllPosts = async (req: Request, res: Response) => {
-
+        
+        const page = parseInt(req.body.page);
+        const limit = parseInt(req.body.limit);
         const postRepository = AppDataSource.getRepository(Post);
-        let filteredPosts;
 
         try {
             const posts = await postRepository.find({
@@ -187,9 +192,10 @@ class PostController {
             })
             .then((posts) => { 
                 //I use map to remove sensitive data of user since select won't work for some reason
-                filteredPosts = posts.map(({user, ...rest})=> {return rest;});
-                const sortedPosts = filteredPosts.sort((objA, objB) => objB.date.getTime() - objA.date.getTime(),);
-                res.send({sortedPosts}); 
+                const mapPosts = posts.map(({user, ...rest})=> {return rest;});
+                const sortedPosts = mapPosts.sort((objA, objB) => objB.date.getTime() - objA.date.getTime(),);
+                //res.send({sortedPosts}); 
+                res.status(200).send(paginate(page, limit, sortedPosts));
             });
         } catch (error) {
             res.status(404).send("Posts not found");

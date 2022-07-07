@@ -4,6 +4,7 @@ import { AppDataSource } from "../index";
 import { Comment } from "../entity/comment";
 import { User } from "../entity/user";
 import { Post } from "../entity/post";
+import paginate from "../middlewares/pagination";
 
 class CommentController {
 
@@ -144,6 +145,8 @@ class CommentController {
     //get comments of a post
     static getPostComments = async (req: Request, res: Response) => {
 
+        const page = parseInt(req.body.page);
+        const limit = parseInt(req.body.limit);
         const postRepository = AppDataSource.getRepository(Post);
         let postId;
 
@@ -162,7 +165,8 @@ class CommentController {
                 where: {
                     postId: postId}
             })
-            .then((post) => { res.status(200).send({post}); });
+            .then((post) => { res.status(200).send(paginate(page, limit, post)); 
+            });
         } catch (error) {
             res.status(404).send("Post/Comments not found");
         }

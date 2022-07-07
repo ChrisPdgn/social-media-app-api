@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import config from "../config/config";
 
 export const checkJwt = (req: Request, res: Response, next: NextFunction) => {
@@ -13,8 +13,7 @@ export const checkJwt = (req: Request, res: Response, next: NextFunction) => {
     res.locals.jwtPayload = jwtPayload;
   } catch (error) {
     //If token is not valid, respond with 401 (unauthorized)
-    console.log("Token not valid");
-    res.status(401).send();
+    res.status(401).send("Token not valid");
     return;
   }
 
