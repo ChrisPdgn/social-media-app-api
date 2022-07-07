@@ -17,7 +17,7 @@ A basic REST API for a social media app with Typescript, Express, TypeORM, SQLit
 1. Git clone or download project and unzip  
 2. Open project folder and run  
 ```
-$ npm install  
+npm install  
 ```
 3. Start server with:  
 ```
