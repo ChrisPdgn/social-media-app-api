@@ -33,7 +33,7 @@ Relations are bydirectional
 ### API Methods  
 ### Important  
 1. Parameters are passed through req.body  
-2. In all GET method calls you need to include parameters page (selection of page) & limit (number of objects/page) for pagination  
+2. In all GET method calls you need to include parameters **page** (selection of page) & **limit** (number of objects/page) for pagination  
   
 **Methods available for users:**  
   
